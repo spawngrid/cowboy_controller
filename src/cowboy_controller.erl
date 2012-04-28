@@ -1,5 +1,5 @@
 -module(cowboy_controller).
--export([routes/0, upgrade/4]).
+-export([upgrade/4]).
 
 -include_lib("cowboy/include/http.hrl").
 
@@ -12,12 +12,6 @@
          handler :: atom(),
          handler_state :: any()
        }).
-
-routes() ->
-   [{[<<"error">>,'...'], cowboy_http_static, 
-                          [{directory, filename:join([code:lib_dir(cowboy_controller, priv), "static"])},
-                           {mimetypes, {fun(Path, _) -> mimetypes:filename(Path) end, []}},
-                           {etag, {attributes, [filepath, filesize, inode, mtime]}}]}].
 
 -spec upgrade(pid(), module(), any(), #http_req{})-> {ok, #http_req{}} | close.
 upgrade(_ListenerPid, Handler, Opts, Req) ->
