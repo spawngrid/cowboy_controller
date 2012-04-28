@@ -1,0 +1,19 @@
+{% extends "_error.html" %}
+{% block error_title %} Exception {% endblock %}
+{% block error %}
+             <p>Exception while processing request in <b>{{ controller }}:{{action}}/2</b>:</p>
+             <h5>Class: <b>{{ error_class }}</b>, reason:</h5>
+             <pre>{{ reason }}</pre>
+             <h5>Stacktrace</h5>
+             <table class="table table-stiped table-bordered" style="background-color: white">
+             <thead><tr><th>M:F/A</th><th>Location</th></tr></thead>
+             <tbody>
+             {% for trace in stacktrace %}
+                <tr>
+                <td>{{ trace|tuple:1 }}:{{ trace|tuple:2 }}/{{ trace|tuple:3 }}</td>
+                <td>{{ trace|tuple:4|fetch:"file" }}:{{ trace|tuple:4|fetch:"line" }}</td>
+                </tr>
+             {% endfor %}
+             </tbody>
+             </table>
+{% endblock %}         	 

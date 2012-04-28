@@ -1,0 +1,13 @@
+{application, cowboy_controller,
+ [
+  {description, "Minimalist Cowboy controller"},
+  {vsn, git},
+  {registered, []},
+  {applications, [
+                  kernel,
+                  stdlib,
+                  erlydtl,
+                  mimetypes
+                 ]},
+  {env, []}
+ ]}.

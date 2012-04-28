@@ -1,0 +1,6 @@
+{% extends "_error.html" %}
+{% block error_title %} Template Error {% endblock %}
+{% block error %}
+             Error while processing template {{ template }} on line #{{ error_line }}:<br />
+         	 <b>{{ error }}</b>
+{% endblock %}         	 
