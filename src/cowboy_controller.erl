@@ -82,8 +82,10 @@ handle_return({render, Render, Req, HandlerState}, #state{} = State) ->
     Req2 = do_render(Render, State#state{ req = Req }),
     {ok, Req2, State#state{ req = Req2, handler_state = HandlerState }}.
 
-do_render({template, Template}, #state{ req = Req } = State) ->
-   do_render(render_template(Template, State), Req);
+do_render({template, Template}, State) ->
+   do_render({{template,Template},[{code, 200}]}, State);
+do_render({{template, Template}, Opts}, #state{ req = Req } = State) ->
+   do_render({render_template(Template, State), Opts}, Req);
 do_render(Bin, Req) when is_binary(Bin) ->
    do_render({Bin, [{code, 200}]}, Req);
 do_render({Bin, Opts}, Req) when is_binary(Bin) ->
