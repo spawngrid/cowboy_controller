@@ -1,5 +1,5 @@
 -module(cowboy_controller).
--export([upgrade/4]).
+-export([set_var/3, upgrade/4]).
 
 -include_lib("cowboy/include/http.hrl").
 
@@ -12,6 +12,11 @@
          handler :: atom(),
          handler_state :: any()
        }).
+
+set_var(Variable, Value, Req) ->
+    {Vars0, Req1} = cowboy_http_req:meta(cowboy_controller_variables, Req, []),
+    Vars = [{Variable, Value}|Vars0],
+    Req1#http_req{ meta = [{cowboy_controller_variables, Vars}|Req1#http_req.meta]}.
 
 -spec upgrade(pid(), module(), any(), #http_req{})-> {ok, #http_req{}} | close.
 upgrade(_ListenerPid, Handler, Opts, Req) ->
@@ -85,9 +90,11 @@ do_render(Bin, State) when is_binary(Bin) ->
 do_render({Bin, Opts}, #state{ req = Req}) when is_binary(Bin) ->
    cowboy_http_req:reply(proplists:get_value(code, Opts, 200), proplists:get_value(headers, Opts, []), Bin, Req).
 
-render_template({Template, Variables}, #state{ mode = Mode, priv = Priv, 
-                                               app = App, action = Action,
-                                               handler = Handler } = State) when is_list(Template) ->
+render_template({Template, Variables}, #state{ 
+                  req = Req,
+                  mode = Mode, priv = Priv, 
+                  app = App, action = Action,
+                  handler = Handler } = State) when is_list(Template) ->
    Hash = erlang:phash2({App, Template}),
    TemplateModule = list_to_atom("cowboy_controller_template_" ++ integer_to_list(Hash)),
    TemplateLoaded = code:is_loaded(TemplateModule),
@@ -102,13 +109,14 @@ render_template({Template, Variables}, #state{ mode = Mode, priv = Priv,
            CompileResult = ok
    end,
    CtrlPriv = code:lib_dir(cowboy_controller, priv),   
+   {MetaVariables, _Req} = cowboy_http_req:meta(cowboy_controller_variables, Req, []),
    case {Mode, CompileResult} of
-        {_, ok} ->
-           {ok, Rendered} = TemplateModule:render([{erlang_application, App},{action, Action},{controller, Handler}|Variables]),
+       {_, ok} ->
+           {ok, Rendered} = TemplateModule:render(MetaVariables ++ [{erlang_application, App},{action, Action},{controller, Handler}|Variables]),
            iolist_to_binary(Rendered);
        {development, {error, {_File, [{Line, erlydtl_scanner, Reason}]}}} ->
            render_template({views_filename("_template_error.html", CtrlPriv), 
-                            [{template, Template}, {variables, Variables},
+                            [{template, Template}, {variables, MetaVariables ++ Variables},
                              {error_line, Line}, {error, Reason}]}, State);
        {production, _} ->
            render_template({views_filename("_public_error.html", CtrlPriv), []}, State)
