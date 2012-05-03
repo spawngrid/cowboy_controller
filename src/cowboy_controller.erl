@@ -78,11 +78,11 @@ handle_return({render, Render, Req, HandlerState}, #state{} = State) ->
 
 do_render({template, Template}, State) ->
    do_render({{template,Template},[{code, 200}]}, State);
-do_render({{template, Template}, Opts}, #state{ req = Req } = State) ->
-   do_render({render_template(Template, State), Opts}, Req);
-do_render(Bin, Req) when is_binary(Bin) ->
-   do_render({Bin, [{code, 200}]}, Req);
-do_render({Bin, Opts}, Req) when is_binary(Bin) ->
+do_render({{template, Template}, Opts}, State) ->
+   do_render({render_template(Template, State), Opts}, State);
+do_render(Bin, State) when is_binary(Bin) ->
+   do_render({Bin, [{code, 200}]}, State);
+do_render({Bin, Opts}, #state{ req = Req}) when is_binary(Bin) ->
    cowboy_http_req:reply(proplists:get_value(code, Opts, 200), proplists:get_value(headers, Opts, []), Bin, Req).
 
 render_template({Template, Variables}, #state{ mode = Mode, priv = Priv, 
