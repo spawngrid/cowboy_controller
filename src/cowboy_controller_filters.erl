@@ -1,5 +1,10 @@
 -module(cowboy_controller_filters).
--export([fetch/2, tuple/2, app_env/2]).
+-export([null/2, fetch/2, tuple/2, app_env/2]).
+
+null(null, Value) ->
+    Value;
+null(Value, _) ->
+    Value.
 
 fetch(PropList, Key) when is_list(PropList) ->
   proplists:get_value(Key, PropList, proplists:get_value(binary_to_atom(Key, latin1), PropList)).
