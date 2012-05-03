@@ -3,8 +3,8 @@
 -include_lib("cowboy/include/http.hrl").
 
 parse(#http_req{} = Req) ->
-    {Form, _} = cowboy_http_req:body_qs(Req),
-    parse(Form);
+    {Form, Req1} = cowboy_http_req:body_qs(Req),
+    {parse(Form), Req1};
 
 parse(Form) ->
     parse_1(Form, []).
