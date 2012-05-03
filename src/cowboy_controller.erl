@@ -114,9 +114,16 @@ render_template({Template, Variables}, #state{
        {_, ok} ->
            {ok, Rendered} = TemplateModule:render(MetaVariables ++ [{erlang_application, App},{action, Action},{controller, Handler}|Variables]),
            iolist_to_binary(Rendered);
-       {development, {error, {_File, [{Line, erlydtl_scanner, Reason}]}}} ->
+       {development, {error, {File, [{{Line, Col},erlydtl_parser, Reason}]}}} ->
            render_template({views_filename("_template_error.html", CtrlPriv), 
                             [{template, Template}, {variables, MetaVariables ++ Variables},
+                             {error_line, Line}, {error_column, Col},
+                             {actual_line, read_line(File, Line)},
+                             {error, Reason}]}, State);
+       {development, {error, {File, [{Line, erlydtl_scanner, Reason}]}}} ->
+           render_template({views_filename("_template_error.html", CtrlPriv), 
+                            [{template, Template}, {variables, MetaVariables ++ Variables},
+                             {actual_line, read_line(File, Line)},
                              {error_line, Line}, {error, Reason}]}, State);
        {production, _} ->
            render_template({views_filename("_public_error.html", CtrlPriv), []}, State)
@@ -129,3 +136,7 @@ views_filename(Path, Priv) ->
 
 helpers_filename(Priv) ->
     filename:join([Priv,"helpers"]).    
+
+read_line(File, Line) ->
+    {ok, B} = file:read_file(File),
+    lists:nth(Line, binary:split(B, <<$\n>>, [global,trim])).

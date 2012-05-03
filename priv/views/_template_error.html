@@ -1,6 +1,10 @@
 {% extends "_error.html" %}
 {% block error_title %} Template Error {% endblock %}
 {% block error %}
-             Error while processing template {{ template }} on line #{{ error_line }}:<br />
+             Error while processing template {{ template }} on line #{{ error_line }} (column {{ error_column | default: "unknown" }}):
          	 <b>{{ error }}</b>
+             <h4>Source</h4>
+             <pre>
+               {{ actual_line }}
+             </pre>
 {% endblock %}         	 
