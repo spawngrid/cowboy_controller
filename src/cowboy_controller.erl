@@ -98,6 +98,7 @@ render_template({Template, Variables}, #state{
    Hash = erlang:phash2({App, Template}),
    TemplateModule = list_to_atom("cowboy_controller_template_" ++ integer_to_list(Hash)),
    TemplateLoaded = code:is_loaded(TemplateModule),
+   ReqDict = make_request_dict(Req),
    if 
       ((Mode == development) orelse not TemplateLoaded) ->
        CompileResult = erlydtl:compile(views_filename(Template, Priv), TemplateModule, 
@@ -112,7 +113,10 @@ render_template({Template, Variables}, #state{
    {MetaVariables, _Req} = cowboy_http_req:meta(cowboy_controller_variables, Req, []),
    case {Mode, CompileResult} of
        {_, ok} ->
-           {ok, Rendered} = TemplateModule:render(MetaVariables ++ [{erlang_application, App},{action, Action},{controller, Handler}|Variables]),
+           {ok, Rendered} = TemplateModule:render(MetaVariables ++ [{erlang_application, App},
+                                                                    {request, ReqDict},
+                                                                    {action, Action},
+                                                                    {controller, Handler}|Variables]),
            iolist_to_binary(Rendered);
        {development, {error, {File, [{{Line, Col},erlydtl_parser, Reason}]}}} ->
            render_template({views_filename("_template_error.html", CtrlPriv), 
@@ -140,3 +144,13 @@ helpers_filename(Priv) ->
 read_line(File, Line) ->
     {ok, B} = file:read_file(File),
     lists:nth(Line, binary:split(B, <<$\n>>, [global,trim])).
+
+make_request_dict(Req) ->
+    lists:foldl(fun({K, F,A}, D) ->
+                        {V, _} =  apply(cowboy_http_req,F,A ++ [Req]),
+                        dict:store(K,V, D)
+                end, dict:new(),
+                [
+                 {path, raw_path, []},
+                 {host, raw_host, []}
+                ]).
