@@ -1,5 +1,6 @@
 -module(cowboy_controller).
--export([set_var/3, upgrade/4]).
+-export([set_var/3, get_var/2, get_var/3,
+         upgrade/4]).
 
 -include_lib("cowboy/include/http.hrl").
 
@@ -17,6 +18,13 @@ set_var(Variable, Value, Req) ->
     {Vars0, Req1} = cowboy_http_req:meta(cowboy_controller_variables, Req, []),
     Vars = [{Variable, Value}|Vars0],
     Req1#http_req{ meta = [{cowboy_controller_variables, Vars}|Req1#http_req.meta]}.
+
+get_var(Variable, Req) ->
+    get_var(Variable, Req, undefined).
+
+get_var(Variable, Req, Default) ->
+    {Vars0, Req1} = cowboy_http_req:meta(cowboy_controller_variables, Req, []),
+    {proplists:get_value(Variable, Vars0, Default), Req1}.
 
 -spec upgrade(pid(), module(), any(), #http_req{})-> {ok, #http_req{}} | close.
 upgrade(_ListenerPid, Handler, Opts, Req) ->
